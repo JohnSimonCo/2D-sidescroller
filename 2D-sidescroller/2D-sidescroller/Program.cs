@@ -3,6 +3,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System.Diagnostics;
 
 namespace _2D_sidescroller
 {
@@ -10,6 +11,15 @@ namespace _2D_sidescroller
     {
 		class Game : GameWindow
 		{
+			private uint[] Buffers = new uint[2];
+
+			private int BUFFER_POSITIONS = 0;
+			private int BUFFER_TEXCOORDS = 1;
+
+			int VertexShader, FragmentShader, ShaderProgram;
+
+			int PositionAttribute, TexCoordAttribute;
+
 			public Game()
 				: base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
 			{
@@ -23,6 +33,102 @@ namespace _2D_sidescroller
 
 				GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
 				GL.Enable(EnableCap.DepthTest);
+				GL.DepthFunc(DepthFunction.Lequal);
+
+				InitShaders();
+
+				InitAttributes();
+
+				InitBuffers();
+			}
+
+			private void InitShaders()
+			{
+				string vertexShaderSrc = @"
+					#version 150
+
+					attribute vec3 aPosition;
+					attribute float aTexCoord;
+
+					varying lowp float vTexCoord;
+
+					void main() {
+						gl_Position = vec4(aPosition);
+						vTexCoord = aTexCoord;
+					}
+
+				";
+
+				string fragmentShaderSrc = @"
+					#version 150
+
+					varying lowp float vTexCoord;
+
+					void main() {
+						gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+					}
+				";
+
+				VertexShader = GL.CreateShader(ShaderType.FragmentShader);
+				GL.ShaderSource(VertexShader, vertexShaderSrc);
+				GL.CompileShader(VertexShader);
+				Debug.WriteLine(GL.GetShaderInfoLog(VertexShader));
+
+				FragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+				GL.ShaderSource(FragmentShader, fragmentShaderSrc);
+				GL.CompileShader(FragmentShader);
+				Debug.WriteLine(GL.GetShaderInfoLog(FragmentShader));
+
+				// Create program
+				ShaderProgram = GL.CreateProgram();
+				GL.AttachShader(ShaderProgram, VertexShader);
+				GL.AttachShader(ShaderProgram, FragmentShader);
+				GL.LinkProgram(ShaderProgram);
+				Debug.WriteLine(GL.GetProgramInfoLog(ShaderProgram));
+
+				GL.UseProgram(ShaderProgram);
+			}
+
+			private void InitAttributes()
+			{
+				PositionAttribute = GL.GetAttribLocation(ShaderProgram, "aPosition");
+				TexCoordAttribute = GL.GetAttribLocation(ShaderProgram, "aTexCoord");
+			}
+
+			private void InitBuffers()
+			{
+				GL.GenBuffers(2, Buffers);
+
+				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_POSITIONS]);
+
+				float[] positions = new float[] {
+				//  x	  y
+					0.0f, 1.0f,
+					1.0f, 1.0f,
+					1.0f, 0.0f,
+					0.0f, 0.0f
+
+				};
+				//Amount of data per vertex
+				int positionAmount = 2;
+
+				GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(positions.Length * positionAmount * sizeof(float)), positions, BufferUsageHint.StaticDraw);
+
+
+				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_POSITIONS]);
+
+				float[] texCoords = new float[] {
+				//  x	  y
+					0.0f, 1.0f,
+					1.0f, 1.0f,
+					1.0f, 0.0f,
+					0.0f, 0.0f
+
+				};
+				//Amount of data per vertex
+				int texcoordAmount = 2;
+
+				GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texCoords.Length * texcoordAmount * sizeof(float)), texCoords, BufferUsageHint.StaticDraw);
 			}
 
 			protected override void OnResize(EventArgs e)
@@ -55,20 +161,26 @@ namespace _2D_sidescroller
 				base.OnRenderFrame(e);
 
 				GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
+				/*
 				Matrix4 modelview = Matrix4.LookAt(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY);
 				GL.MatrixMode(MatrixMode.Modelview);
 				GL.LoadMatrix(ref modelview);
+				*/
 
-				GL.Begin(BeginMode.Triangles);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_POSITIONS]);
+				GL.VertexAttribPointer(PositionAttribute, 2, VertexAttribPointerType.Float, false, 0, 0);
 
-				GL.Color3(1.0f, 1.0f, 0.0f); GL.Vertex3(-1.0f, -1.0f, 4.0f);
-				GL.Color3(1.0f, 0.0f, 0.0f); GL.Vertex3(1.0f, -1.0f, 4.0f);
-				GL.Color3(0.2f, 0.9f, 1.0f); GL.Vertex3(0.0f, 1.0f, 4.0f);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_TEXCOORDS]);
+				GL.VertexAttribPointer(PositionAttribute, 2, VertexAttribPointerType.Float, false, 0, 0);
+				
+				GL.DrawArrays(PrimitiveType.Triangles, 0, 4);
+			}
 
-				GL.End();
-
-				SwapBuffers();
+			protected override void OnClosed(EventArgs e)
+			{
+				base.OnClosed(e);
+			
+				
 			}
 
 			[STAThread]
