@@ -39,8 +39,10 @@ namespace _2D_sidescroller
 			{
 				base.OnUpdateFrame(e);
 
-				if (Keyboard[Key.Escape])
-					Exit();
+                if (Keyboard[Key.Escape])
+                {
+                    Exit();                    
+                }
 			}
 
 			protected override void OnRenderFrame(FrameEventArgs e)
