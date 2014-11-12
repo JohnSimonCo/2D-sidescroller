@@ -3,6 +3,10 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Reflection;
 
 namespace _2D_sidescroller
 {
@@ -10,8 +14,11 @@ namespace _2D_sidescroller
     {
 		class Game : GameWindow
 		{
+
+			uint PlayerTexture;
+
 			public Game()
-				: base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
+				: base(800, 600, GraphicsMode.Default, "John och Simons superspel")
 			{
 				VSync = VSyncMode.On;
 			//	Keyboard.KeyDown += new KeyDownEvent(OnKeyDown);
@@ -23,7 +30,12 @@ namespace _2D_sidescroller
 
 				GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
 				GL.Enable(EnableCap.DepthTest);
+				GL.Enable(EnableCap.Texture2D);
+
+				PlayerTexture = (uint)LoadTexture(getFilepathInDebugDir("player.png"));
 			}
+
+			
 
 			protected override void OnResize(EventArgs e)
 			{
@@ -45,6 +57,18 @@ namespace _2D_sidescroller
                     Exit();
 				}
 				else if (Keyboard[Key.Right])
+				{
+
+				}
+				else if (Keyboard[Key.Left])
+				{
+
+				}
+				else if (Keyboard[Key.Up])
+				{
+
+				}
+				else if (Keyboard[Key.Down])
 				{
 
 				}
@@ -71,15 +95,47 @@ namespace _2D_sidescroller
 				SwapBuffers();
 			}
 
+			private string getFilepathInDebugDir(string path)
+			{
+				return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), path).Replace("file:\\", "");
+			}
+
+
+			static int LoadTexture(string filename)
+			{
+				if (String.IsNullOrEmpty(filename))
+					throw new ArgumentException(filename);
+
+				int id = GL.GenTexture();
+				GL.BindTexture(TextureTarget.Texture2D, id);
+
+				Bitmap bmp = new Bitmap(filename);
+				BitmapData bmp_data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmp_data.Width, bmp_data.Height, 0,
+					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmp_data.Scan0);
+
+				bmp.UnlockBits(bmp_data);
+
+				// We haven't uploaded mipmaps, so disable mipmapping (otherwise the texture will not appear).
+				// On newer video cards, we can use GL.GenerateMipmaps() or GL.Ext.GenerateMipmaps() to create
+				// mipmaps automatically. In that case, use TextureMinFilter.LinearMipmapLinear to enable them.
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+
+				return id;
+			}
+
+
 			[STAThread]
 			static void Main()
 			{
 				// The 'using' idiom guarantees proper resource cleanup.
-				// We request 30 UpdateFrame events per second, and unlimited
+				// We request 60 UpdateFrame events per second, and unlimited
 				// RenderFrame events (as fast as the computer can handle).
 				using (Game game = new Game())
 				{
-					game.Run(30.0);
+					game.Run(60.0);
 				}
 			}
 		}
