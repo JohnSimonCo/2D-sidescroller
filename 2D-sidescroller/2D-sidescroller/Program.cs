@@ -14,6 +14,7 @@ namespace _2D_sidescroller
 				: base(800, 600, GraphicsMode.Default, "OpenTK Quick Start Sample")
 			{
 				VSync = VSyncMode.On;
+			//	Keyboard.KeyDown += new KeyDownEvent(OnKeyDown);
 			}
 
 			protected override void OnLoad(EventArgs e)
@@ -41,8 +42,12 @@ namespace _2D_sidescroller
 
                 if (Keyboard[Key.Escape])
                 {
-                    Exit();                    
-                }
+                    Exit();
+				}
+				else if (Keyboard[Key.Right])
+				{
+
+				}
 			}
 
 			protected override void OnRenderFrame(FrameEventArgs e)
