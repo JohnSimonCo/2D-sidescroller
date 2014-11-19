@@ -26,7 +26,6 @@ namespace _2D_sidescroller
 			int PositionAttribute, TexCoordAttribute;
 
 			uint PlayerTexture;
-			uint MapTexture;
 
 			public Game()
 				: base(800, 600, GraphicsMode.Default, "John och Simons superspel")
@@ -51,7 +50,6 @@ namespace _2D_sidescroller
 				InitBuffers();
 
 				PlayerTexture = (uint)LoadTexture(getFilepathInDebugDir("player.png"));
-				MapTexture = (uint)LoadTexture(getFilepathInDebugDir("map.png"));
 			}
 
 			private void InitShaders()
