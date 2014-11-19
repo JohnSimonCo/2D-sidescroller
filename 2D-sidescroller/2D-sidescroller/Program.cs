@@ -15,17 +15,16 @@ namespace _2D_sidescroller
     {
 		class Game : GameWindow
 		{
-			private uint[] Buffers = new uint[3];
-
-			private int BUFFER_POSITIONS = 0;
-			private int BUFFER_TEXCOORDS = 1;
-			private int BUFFER_INDICES = 2;
+			private int PositionBuffer, TexCoordBuffer;
 
 			int VertexShader, FragmentShader, ShaderProgram;
 
-			int PositionAttribute, TexCoordAttribute;
+			int[] Indices = new int[] {
+				0, 1, 2,
+				0, 2, 3
+			};
 
-			uint PlayerTexture;
+			int PositionAttribute, TexCoordAttribute;
 
 			public Game()
 				: base(800, 600, GraphicsMode.Default, "John och Simons superspel")
@@ -49,7 +48,7 @@ namespace _2D_sidescroller
 
 				InitBuffers();
 
-				PlayerTexture = (uint)LoadTexture(getFilepathInDebugDir("player.png"));
+				//uint PlayerTexture = (uint)LoadTexture(getFilepathInDebugDir("player.png"));
 			}
 
 			private void InitShaders()
@@ -57,13 +56,13 @@ namespace _2D_sidescroller
 				string vertexShaderSrc = @"
 					#version 150
 
-					attribute vec3 aPosition;
-					attribute float aTexCoord;
+					in vec2 aPosition;
+					in vec2 aTexCoord;
 
-					varying lowp float vTexCoord;
+					out vec2 vTexCoord;
 
 					void main() {
-						gl_Position = vec4(aPosition, 1.0);
+						gl_Position = vec4(aPosition, 0.0, 1.0);
 						vTexCoord = aTexCoord;
 					}
 
@@ -72,10 +71,12 @@ namespace _2D_sidescroller
 				string fragmentShaderSrc = @"
 					#version 150
 
-					varying lowp float vTexCoord;
+					in vec2 vTexCoord;
 
+					out vec4 fragmentColor;
+					
 					void main() {
-						gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+						fragmentColor = vec4(0.5, 0.0, 0.0, 1.0);
 					}
 				";
 
@@ -102,54 +103,41 @@ namespace _2D_sidescroller
 			private void InitAttributes()
 			{
 				PositionAttribute = GL.GetAttribLocation(ShaderProgram, "aPosition");
+
 				TexCoordAttribute = GL.GetAttribLocation(ShaderProgram, "aTexCoord");
 			}
 
 			private void InitBuffers()
 			{
-				GL.GenBuffers(3, Buffers);
+				GL.GenBuffers(1, out PositionBuffer);
 
-				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_POSITIONS]);
+				GL.BindBuffer(BufferTarget.ArrayBuffer, PositionBuffer);
 
-				float[] positions = new float[] {
-				//  x	  y
-					0.0f, 1.0f,
-					1.0f, 1.0f,
-					1.0f, 0.0f,
-					0.0f, 0.0f
-
+				Vector2[] PositionData = new Vector2[] {
+					new Vector2(-1f, -1f),
+					new Vector2(-1f,  1f),
+					new Vector2( 1f,  1f),
+					new Vector2( 1f, -1f)
 				};
-				//Amount of data per vertex
-				int positionAmount = 2;
 
-				GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(positions.Length * sizeof(float)), positions, BufferUsageHint.StaticDraw);
+				GL.BufferData<Vector2>(BufferTarget.ArrayBuffer, (IntPtr)(PositionData.Length * Vector2.SizeInBytes), PositionData, BufferUsageHint.StaticDraw);
+				GL.VertexAttribPointer(PositionAttribute, 2, VertexAttribPointerType.Float, false, 0, 0);
 
+				//-----------
 
-				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_POSITIONS]);
+				GL.GenBuffers(1, out TexCoordBuffer);
 
-				float[] texCoords = new float[] {
-				//   x	  y
-					-1, -1, 0,
-					-1,  1, 0,
-					 1,  1, 0,
-					 1, -1, 0
+				GL.BindBuffer(BufferTarget.ArrayBuffer, TexCoordBuffer);
 
+				Vector2[] TexCoordData = new Vector2[] {
+					new Vector2(0f, 0f),
+					new Vector2(0f, 1f),
+					new Vector2(1f, 1f),
+					new Vector2(1f, 0f)
 				};
-				//Amount of data per vertex
-				int texcoordAmount = 2;
 
-				GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texCoords.Length * sizeof(float)), texCoords, BufferUsageHint.StaticDraw);
-
-				GL.BindBuffer(BufferTarget.ElementArrayBuffer, Buffers[BUFFER_INDICES]);
-
-				float[] indices = new float[] {
-					0, 1, 2,
-                    0, 2, 3
-				};
-				//Amount of data per vertex
-				int indicesAmount = 1;
-
-				GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indices.Length * sizeof(float)), indices, BufferUsageHint.StaticDraw);
+				GL.BufferData<Vector2>(BufferTarget.ArrayBuffer, (IntPtr)(TexCoordData.Length * Vector2.SizeInBytes), TexCoordData, BufferUsageHint.StaticDraw);
+				GL.VertexAttribPointer(TexCoordBuffer, 2, VertexAttribPointerType.Float, false, 0, 0);
 			}
 
 			
@@ -159,10 +147,6 @@ namespace _2D_sidescroller
 				base.OnResize(e);
 
 				GL.Viewport(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
-
-				Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4, Width / (float)Height, 1.0f, 64.0f);
-				GL.MatrixMode(MatrixMode.Projection);
-				GL.LoadMatrix(ref projection);
 			}
 
 			protected override void OnUpdateFrame(FrameEventArgs e)
@@ -172,22 +156,6 @@ namespace _2D_sidescroller
                 if (Keyboard[Key.Escape])
                 {
                     Exit();
-				}
-				else if (Keyboard[Key.Right])
-				{
-
-				}
-				else if (Keyboard[Key.Left])
-				{
-
-				}
-				else if (Keyboard[Key.Up])
-				{
-
-				}
-				else if (Keyboard[Key.Down])
-				{
-
 				}
 			}
 
@@ -203,21 +171,19 @@ namespace _2D_sidescroller
 				base.OnRenderFrame(e);
 
 				GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-				/*
-				Matrix4 modelview = Matrix4.LookAt(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY);
-				GL.MatrixMode(MatrixMode.Modelview);
-				GL.LoadMatrix(ref modelview);
-				*/
 
-				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_POSITIONS]);
-				GL.VertexAttribPointer(PositionAttribute, 2, VertexAttribPointerType.Float, false, 0, 0);
+				//GL.BindBuffer(BufferTarget.ArrayBuffer, PositionBuffer);
+				GL.EnableVertexAttribArray(PositionAttribute);
+				//GL.EnableVertexAttribArray(TexCoordAttribute);
 
-				GL.BindBuffer(BufferTarget.ArrayBuffer, Buffers[BUFFER_TEXCOORDS]);
-				GL.VertexAttribPointer(PositionAttribute, 2, VertexAttribPointerType.Float, false, 0, 0);
+				//GL.BindBuffer(BufferTarget.ArrayBuffer, TexCoordBuffer);
 
-				GL.BindBuffer(BufferTarget.ElementArrayBuffer, Buffers[BUFFER_INDICES]);
-				
-				GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+				GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+				GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.UnsignedInt, Indices);
+
+				GL.DisableVertexAttribArray(PositionAttribute);
+				//GL.DisableVertexAttribArray(TexCoordAttribute);
+				GL.Flush();
 
 				SwapBuffers();
 			}
