@@ -23,11 +23,15 @@ namespace _2D_sidescroller
 		public QuadTree(float width, float height)
 		{
 			IsRoot = true;
+
+			BB = new BoundingBox(0f, 0f, width, height);
 		}
 
 		private QuadTree(float x, float y, float width, float height)
 		{
 			IsRoot = false;
+
+			BB = new BoundingBox(x, y, width, height);
 		}
 
 		private bool IsLeaf()
