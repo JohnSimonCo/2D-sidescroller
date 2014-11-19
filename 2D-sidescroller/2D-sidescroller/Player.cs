@@ -9,8 +9,7 @@ namespace _2D_sidescroller
 {
 	class Player : Entity
 	{
-		Player(Vector2 pos, Vector2 size, uint texture)
-			: base(pos, size, texture)
+		Player(Vector2 pos, Vector2 size, uint texture) : base(pos, size, texture)
 		{
 
 		}

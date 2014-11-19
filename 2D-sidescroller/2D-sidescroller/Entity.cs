@@ -27,5 +27,10 @@ namespace _2D_sidescroller
 
 		}
 
+		protected bool Move(Vector2 move)
+		{
+			Pos += move;
+			return true;
+		}
 	}
 }
