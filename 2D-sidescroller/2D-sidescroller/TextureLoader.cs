@@ -7,10 +7,10 @@ using System.Reflection;
 
 namespace _2D_sidescroller
 {
-	class TextureLoader
+	public static class TextureLoader
 	{
 
-		static int Load(string filename)
+		public static int LoadOpenGLTexture(string filename)
 		{
 
 			filename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), filename).Replace("file:\\", "");
@@ -36,6 +36,17 @@ namespace _2D_sidescroller
 			GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
 
 			return id;
+		}
+
+		public static Bitmap LoadBitmap(string filename)
+		{
+
+			filename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), filename).Replace("file:\\", "");
+
+			if (String.IsNullOrEmpty(filename))
+				throw new ArgumentException(filename);
+
+			return new Bitmap(filename);;
 		}
 
 	}
