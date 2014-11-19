@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace _2D_sidescroller
 {
-	class QuadTree<T>
+	class QuadTree
 	{
 		private static const int QUAD = 4;
 		private static const int UL = 0;
@@ -14,40 +15,42 @@ namespace _2D_sidescroller
 		private static const int LL = 2;
 		private static const int LR = 3;
 
-		private bool IsRoot;
-
-		private QuadTree<T>[] Children = null;
+		private QuadTree[] Children = null;
 
 		private BoundingBox BB;
 
+		public HashSet<IBoundingBoxHolder> Data = new HashSet<IBoundingBoxHolder>();
+
 		public QuadTree(float width, float height)
 		{
-			IsRoot = true;
-
-			BB = new BoundingBox(0f, 0f, width, height);
+			BB = new BoundingBox(new Vector2(width / 2f, height / 2f), new Vector2(width, height));
 		}
 
-		private QuadTree(float x, float y, float width, float height)
+		private QuadTree(Vector2 pos, Vector2 size)
 		{
-			IsRoot = false;
-
-			BB = new BoundingBox(x, y, width, height);
+			BB = new BoundingBox(pos, size);
 		}
 
-		private bool IsLeaf()
+		private bool IsLeaf
 		{
-			return Children == null;
+			get
+			{
+				return Children == null;
+			}
 		}
 
 		public void Divide()
 		{
-			if (IsLeaf())
+			if (IsLeaf)
 			{
-				Children = new QuadTree<T>[QUAD];
-				for (int i = 0; i < Children.Length; i++)
-				{
-					//Children[i] = new QuadTree<T>(true);
-				}
+				Children = new QuadTree[QUAD];
+				
+				Vector2 childSize = BB.Size / 2f;
+				Vector2 step = childSize / 2f;
+				Children[UL] = new QuadTree(BB.Pos + new Vector2(-step.X, step.Y), childSize);
+				Children[UR] = new QuadTree(BB.Pos + new Vector2(step.X, step.Y), childSize);
+				Children[LL] = new QuadTree(BB.Pos + new Vector2(-step.X, -step.Y), childSize);
+				Children[LR] = new QuadTree(BB.Pos + new Vector2(step.X, -step.Y), childSize);
 			}
 			else
 			{
@@ -58,9 +61,51 @@ namespace _2D_sidescroller
 			}
 		}
 
-		public List<T> Query(BoundingBox query)
+		public void Add(IBoundingBoxHolder data)
 		{
-			return null;
+			if (IsLeaf)
+			{
+				return;
+			}
+
+			BoundingBox bb = data.BB;
+			foreach (QuadTree child in Children)
+			{
+				if (child.Intersects(bb))
+				{
+					child.Data.Add(data);
+					child.Add(data);
+				}
+			}
+		}
+
+		public HashSet<IBoundingBoxHolder> Query(BoundingBox query)
+		{
+			if (IsLeaf)
+			{
+				return Data;
+			}
+
+			HashSet<IBoundingBoxHolder> result = new HashSet<IBoundingBoxHolder>();
+			foreach (QuadTree child in Children)
+			{
+				if (child.Intersects(query))
+				{
+					foreach(IBoundingBoxHolder holder in child.Query(query))
+					{
+						if (!result.Contains(holder) && query.Intersects(holder.BB))
+						{
+							result.Add(holder);
+						}
+					}
+				}
+			}
+			return result;
+		}
+
+		protected bool Intersects(BoundingBox other)
+		{
+			return BB.Intersects(other);
 		}
 	}
 }

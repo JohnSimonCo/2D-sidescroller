@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,15 +9,12 @@ namespace _2D_sidescroller
 {
 	class BoundingBox
 	{
+		public Vector2 Pos, Size;
 
-		public float X, Y, W, H;
-
-		public BoundingBox(float x, float y, float w, float h)
+		public BoundingBox(Vector2 pos, Vector2 size)
 		{
-			this.X = x;
-			this.Y = y;
-			this.W = w;
-			this.H = h;
+			Pos = pos;
+			Size = size;
 		}
 
 		/*
@@ -27,8 +25,8 @@ namespace _2D_sidescroller
 		 */
 		public Boolean Intersects(BoundingBox o)
 		{
-			return (Math.Abs(X - o.X) * 2 < (W + o.W)) &&
-			(Math.Abs(Y - o.Y) * 2 < (H + o.H));
+			return (Math.Abs(Pos.X - o.Pos.X) * 2 < (Size.X + o.Size.X)) &&
+			(Math.Abs(Pos.Y - o.Pos.Y) * 2 < (Size.Y + o.Size.Y));
 		}
 
 	}
